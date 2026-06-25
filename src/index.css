@@ -1,0 +1,81 @@
+:root {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F5F5F5;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B6B6B;
+  --color-stroke-primary: #E0E0E0;
+  --color-icon-primary: #1A1A1A;
+  --color-icon-secondary: #6B6B6B;
+  --color-accent: #FF9300;          /* Telpark Orange — primary brand color */
+  --color-accent-light: #FFF3E0;    /* Orange tinted background */
+  --color-secondary: #202247;       /* Telpark Navy — secondary brand color */
+  --color-secondary-light: #ECEDF5; /* Navy tinted background */
+  --color-success: #22C55E;       /* High availability */
+  --color-warning: #D4A017;       /* Medium availability - Mustard Yellow */
+  --color-error: #EF4444;         /* Low availability or full */
+  
+  --font-family: 'Inter', sans-serif;
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+}
+
+#root {
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+@media (min-width: 480px) {
+  #root {
+    width: 390px;
+    margin: 0 auto;
+  }
+}
+
+/* Base button resets */
+button {
+  font-family: var(--font-family);
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Custom scrollbar hiding for horizontal scrolls */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
