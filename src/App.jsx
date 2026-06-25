@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapLayer from './components/MapLayer';
 import SearchBar from './components/SearchBar';
 import IdleBottomStrip from './components/IdleBottomStrip';
 import BottomSheet from './components/BottomSheet';
 import NavigationSheet from './components/NavigationSheet';
+import RegisterSpotSheet from './components/RegisterSpotSheet';
+import SessionActiveCard from './components/SessionActiveCard';
+import FindVehicleSheet from './components/FindVehicleSheet';
 
 function App() {
+  const [bannerVisible, setBannerVisible] = useState(false);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      // do nothing — do NOT reset bannerVisible on visibility change
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+
   const [mapInstance, setMapInstance] = useState(null);
   const [selectedParking, setSelectedParking] = useState(null);
   const [sheetView, setSheetView] = useState('collapsed'); // 'collapsed' | 'expanded'
@@ -13,7 +26,20 @@ function App() {
   const [navigationSheetOpen, setNavigationSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Session State
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionParking, setSessionParking] = useState(null);
+  const [sessionFloor, setSessionFloor] = useState('');
+  const [sessionSpot, setSessionSpot] = useState('');
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+
+  // New UI states
+  const [showRegisterSheet, setShowRegisterSheet] = useState(false);
+  const [sessionView, setSessionView] = useState('bar'); // 'bar' | 'detail'
+
   const handleSelectParking = (parking) => {
+    if (bannerVisible) return;
+    if (showRegisterSheet || sessionActive) return;
     if (mapInstance) {
       mapInstance.flyTo([parking.lat, parking.lng], 16, { duration: 0.8 });
     }
@@ -49,8 +75,38 @@ function App() {
     setSheetVisible(false);
   };
 
+  const handleNavigateComplete = () => {
+    setSessionParking(selectedParking);
+    setSelectedParking(null);
+    setSheetVisible(false);
+  };
+
+  const handleStartRegistration = () => {
+    setBannerVisible(false);
+    setShowRegisterSheet(true);
+  };
+
+  const handleConfirmRegistration = (floor, spot) => {
+    setSessionActive(true);
+    setSessionFloor(floor);
+    setSessionSpot(spot);
+    setSessionStartTime(Date.now());
+    setSessionView('bar');
+    setShowRegisterSheet(false);
+    setSheetVisible(false);
+  };
+
+  const handleEndSession = () => {
+    setSessionActive(false);
+    setSessionParking(null);
+    setSessionFloor('');
+    setSessionSpot('');
+    setSessionStartTime(null);
+    setSessionView('bar');
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative', overflow: 'hidden' }}>
       {/* Brand Bar */}
       <div style={{
         height: '44px',
@@ -87,7 +143,7 @@ function App() {
         <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       
         {/* Idle Strip - only show when no parking is selected */}
-        {!sheetVisible && (
+        {!bannerVisible && !sheetVisible && !showRegisterSheet && !sessionActive && (
           <IdleBottomStrip onSelectParking={handleSelectParking} searchQuery={searchQuery} />
         )}
 
@@ -108,6 +164,76 @@ function App() {
           isOpen={navigationSheetOpen}
           onClose={handleCloseNavigation}
           destinationCoords={selectedParking ? { lat: selectedParking.lat, lng: selectedParking.lng } : null}
+          onNavigateComplete={handleNavigateComplete}
+          setBannerVisible={setBannerVisible}
+        />
+
+        {sessionActive && sessionParking && (
+          <SessionActiveCard 
+            isVisible={sessionView === 'bar'}
+            parking={sessionParking}
+            floor={sessionFloor}
+            spot={sessionSpot}
+            startTime={sessionStartTime}
+            onEnd={() => setSessionView('detail')}
+          />
+        )}
+
+        {bannerVisible && (
+          <div style={{
+            position: 'absolute',
+            bottom: '120px',
+            left: '16px',
+            right: '16px',
+            background: '#FFFFFF',
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            zIndex: 99999
+          }}>
+            <span style={{ fontSize: '15px', fontWeight: '600', color: '#1A1A1A' }}>
+              ¿Ya estás en el parking?
+            </span>
+            <button
+              onClick={() => {
+                setBannerVisible(false)
+                handleStartRegistration()
+              }}
+              style={{
+                background: '#FF9300',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '999px',
+                padding: '10px 16px',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Registrar mi plaza
+            </button>
+          </div>
+        )}
+
+        <RegisterSpotSheet 
+          isOpen={showRegisterSheet}
+          parking={sessionParking}
+          onConfirm={handleConfirmRegistration}
+          onClose={() => setShowRegisterSheet(false)}
+        />
+
+        <FindVehicleSheet 
+          isOpen={sessionActive && sessionView === 'detail'}
+          parking={sessionParking}
+          floor={sessionFloor}
+          spot={sessionSpot}
+          startTime={sessionStartTime}
+          onClose={() => setSessionView('bar')}
+          onEndSession={handleEndSession}
         />
       </div>
     </div>

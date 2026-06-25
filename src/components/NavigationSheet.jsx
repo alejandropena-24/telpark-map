@@ -1,17 +1,20 @@
 import React from 'react';
 import { Map, Navigation, Compass } from 'lucide-react';
 
-const NavigationSheet = ({ isOpen, onClose, destinationCoords }) => {
+const NavigationSheet = ({ isOpen, onClose, destinationCoords, onNavigateComplete, setBannerVisible }) => {
   const openGoogleMaps = (lat, lng) => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    setTimeout(() => setBannerVisible(true), 500);
   };
 
   const openAppleMaps = (lat, lng) => {
     window.open(`maps://maps.apple.com/?daddr=${lat},${lng}`, '_blank');
+    setTimeout(() => setBannerVisible(true), 500);
   };
 
   const openWaze = (lat, lng) => {
     window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank');
+    setTimeout(() => setBannerVisible(true), 500);
   };
 
   const handleAction = (action) => {
@@ -19,6 +22,9 @@ const NavigationSheet = ({ isOpen, onClose, destinationCoords }) => {
       action(destinationCoords.lat, destinationCoords.lng);
     }
     onClose();
+    if (onNavigateComplete) {
+      onNavigateComplete();
+    }
   };
 
   return (
